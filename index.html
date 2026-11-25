@@ -1,115 +1,57 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Treningsapp</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Treningsapp</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- SIDE 0: INNLOGGING -->
-    <div id="login-side">
-        <h1>Treningsapp 💪</h1>
-        <p>Logg inn for å starte</p>
-        <input type="text" id="brukernavn-input" placeholder="Skriv navn...">
-        <button onclick="loggInn()">Logg inn</button>
+  <div id="login-boks">
+    <h1>Treningsapp</h1>
+    <input type="text" id="navn-input" placeholder="Skriv navnet ditt">
+    <button onclick="loggInn()">Logg inn</button>
+  </div>
+
+  <div id="app" style="display: none;">
+    <div class="topp">
+      <h2 id="velkommen"></h2>
+      <p>Poeng: <span id="poeng-tekst">0</span></p>
+      <button onclick="loggUt()">Logg ut</button>
     </div>
 
-    <!-- HOVEDAPP (Skjult før innlogging) -->
-    <div id="app-ramme" style="display: none;">
-        
-        <!-- Toppbar -->
-        <header>
-            <span id="velkomst-tekst"></span>
-            <button class="liten-knapp" onclick="loggUt()">Logg ut</button>
-        </header>
-
-        <!-- FANE 1: MIN PLAN (Viser valgt plan + egne øvelser) -->
-        <div id="side-min-plan" class="fane">
-            <h2>Min treningsplan</h2>
-
-            <!-- Her dukker ferdig plan opp når du velger en -->
-            <div id="aktiv-plan-boks" class="kort" style="display: none;">
-                <span class="merkelapp">Valgt plan</span>
-                <h3 id="aktiv-plan-tittel"></h3>
-                <p id="aktiv-plan-ovelse"></p>
-                <button onclick="fullforAktivPlan()">Fullfør økt (+<span id="aktiv-plan-poeng"></span> poeng)</button>
-            </div>
-
-            <p id="ingen-plan-tekst" class="info-tekst">Ingen ferdig plan valgt enda. Gå til "Ferdige planer" for å velge en!</p>
-
-            <hr>
-
-            <h3>Legg til egne øvelser</h3>
-            <select id="dag-velger">
-                <option value="Mandag">Mandag</option>
-                <option value="Tirsdag">Tirsdag</option>
-                <option value="Onsdag">Onsdag</option>
-                <option value="Torsdag">Torsdag</option>
-                <option value="Fredag">Fredag</option>
-                <option value="Lørdag">Lørdag</option>
-                <option value="Søndag">Søndag</option>
-            </select>
-            <input type="text" id="ovelse-input" placeholder="F.eks. Benkpress 3x10">
-            <button onclick="leggTilEgenOvelse()">Legg til i ukeplan</button>
-
-            <ul id="egen-plan-liste"></ul>
-        </div>
-
-        <!-- FANE 2: FERDIGE PLANER -->
-        <div id="side-ferdige" class="fane" style="display: none;">
-            <h2>Velg en treningsplan</h2>
-
-            <h3>🏠 Hjemmetrening</h3>
-            <div class="kort">
-                <h4>Lett - Morgenstart</h4>
-                <p>15 knebøy, 10 pushups, 30 sek planke</p>
-                <button onclick="velgPlan('Lett - Morgenstart', '15 knebøy, 10 pushups, 30 sek planke', 30)">Velg denne planen (30p)</button>
-            </div>
-
-            <div class="kort">
-                <h4>Tøff - Fullkropp HIIT</h4>
-                <p>4x20 burpees, 4x15 utfall, 4x20 situps</p>
-                <button onclick="velgPlan('Tøff - Fullkropp HIIT', '4x20 burpees, 4x15 utfall, 4x20 situps', 75)">Velg denne planen (75p)</button>
-            </div>
-
-            <h3>🏋️ Treningssenter</h3>
-            <div class="kort">
-                <h4>Push (Bryst & Skuldre)</h4>
-                <p>Benkpress 3x10, Skulderpress 3x10, Triceps 3x12</p>
-                <button onclick="velgPlan('Push (Bryst & Skuldre)', 'Benkpress 3x10, Skulderpress 3x10, Triceps 3x12', 100)">Velg denne planen (100p)</button>
-            </div>
-
-            <div class="kort">
-                <h4>Pull (Rygg & Biceps)</h4>
-                <p>Nedtrekk 3x10, Roing 3x10, Bicepscurl 3x12</p>
-                <button onclick="velgPlan('Pull (Rygg & Biceps)', 'Nedtrekk 3x10, Roing 3x10, Bicepscurl 3x12', 100)">Velg denne planen (100p)</button>
-            </div>
-
-            <div class="kort">
-                <h4>Beindag (Tung)</h4>
-                <p>Knebøy med stang 4x8, Beinpress 3x12, Leg curl 3x12</p>
-                <button onclick="velgPlan('Beindag (Tung)', 'Knebøy med stang 4x8, Beinpress 3x12, Leg curl 3x12', 120)">Velg denne planen (120p)</button>
-            </div>
-        </div>
-
-        <!-- FANE 3: LEADERBOARD -->
-        <div id="side-leaderboard" class="fane" style="display: none;">
-            <h2>Leaderboard 🏆</h2>
-            <p class="info-tekst">Fullfør økter for å klatre på listen!</p>
-            <ol id="leaderboard-liste"></ol>
-        </div>
-
-        <!-- BUNNMENY (Bytter mellom sidene) -->
-        <nav class="bunnmeny">
-            <button onclick="byttSide('side-min-plan')">Min plan</button>
-            <button onclick="byttSide('side-ferdige')">Ferdige planer</button>
-            <button onclick="byttSide('side-leaderboard')">Toppliste</button>
-        </nav>
-
+    <div class="boks">
+      <h3>Ferdige treningsplaner</h3>
+      <button onclick="velgPlan('nybegynner')">Fullkropp Nybegynner</button>
+      <button onclick="velgPlan('styrke')">Styrke 3 dager</button>
+      <button onclick="velgPlan('kondis')">Kondisjon</button>
     </div>
 
-    <script src="script.js"></script>
+    <div class="boks">
+      <h3>Ukeplan</h3>
+      <div id="dager-knapper">
+        <button onclick="byttDag('Mandag')">Mandag</button>
+        <button onclick="byttDag('Tirsdag')">Tirsdag</button>
+        <button onclick="byttDag('Onsdag')">Onsdag</button>
+        <button onclick="byttDag('Torsdag')">Torsdag</button>
+        <button onclick="byttDag('Fredag')">Fredag</button>
+        <button onclick="byttDag('Lørdag')">Lørdag</button>
+        <button onclick="byttDag('Søndag')">Søndag</button>
+      </div>
+
+      <h4 id="valgt-dag-tittel">Mandag</h4>
+      <input type="text" id="ovelse-input" placeholder="Ny øvelse (f.eks. 3x10 Benkpress)">
+      <button onclick="leggTilOvelse()">Legg til</button>
+
+      <ul id="ovelse-liste"></ul>
+    </div>
+
+    <div class="boks">
+      <h3>Leaderboard</h3>
+      <ul id="leaderboard-liste"></ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>

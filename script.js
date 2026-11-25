@@ -1,128 +1,135 @@
-// Henter lagret data fra nettleseren
-let bruker = localStorage.getItem("bruker");
-let aktivPlan = JSON.parse(localStorage.getItem("aktivPlan")) || null;
-let egneOvelser = JSON.parse(localStorage.getItem("egneOvelser")) || [];
-let poengListe = JSON.parse(localStorage.getItem("poengListe")) || [
-    { navn: "Ola", poeng: 100 },
-    { navn: "Kari", poeng: 80 }
-];
+let bruker = "";
+let valgtDag = "Mandag";
+let alleBrukere = JSON.parse(localStorage.getItem("treningsBrukere")) || {
+  "Ola": { poeng: 50, plan: {} },
+  "Kari": { poeng: 80, plan: {} },
+  "Per": { poeng: 30, plan: {} }
+};
 
-// Starter appen hvis bruker allerede er logget inn
-if (bruker) {
-    visApp();
+function lagre() {
+  localStorage.setItem("treningsBrukere", JSON.stringify(alleBrukere));
 }
 
 function loggInn() {
-    let navn = document.getElementById("brukernavn-input").value;
-    if (navn === "") return;
-
-    localStorage.setItem("bruker", navn);
-    bruker = navn;
-
-    // Sjekk om bruker finnes i lista fra før
-    let finnes = false;
-    for (let i = 0; i < poengListe.length; i++) {
-        if (poengListe[i].navn === navn) {
-            finnes = true;
-        }
-    }
-    if (!finnes) {
-        poengListe.push({ navn: navn, poeng: 0 });
-    }
-
-    lagreData();
-    visApp();
+  let navn = document.getElementById("navn-input").value;
+  if (navn == "") {
+    alert("Skriv et navn!");
+    return;
+  }
+  bruker = navn;
+  if (!alleBrukere[bruker]) {
+    alleBrukere[bruker] = {
+      poeng: 0,
+      plan: {
+        Mandag: [], Tirsdag: [], Onsdag: [], Torsdag: [], Fredag: [], Lørdag: [], Søndag: []
+      }
+    };
+  }
+  lagre();
+  document.getElementById("login-boks").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  document.getElementById("velkommen").innerText = "Hei, " + bruker;
+  oppdaterSkjerm();
 }
 
 function loggUt() {
-    localStorage.removeItem("bruker");
-    location.reload();
+  bruker = "";
+  document.getElementById("login-boks").style.display = "block";
+  document.getElementById("app").style.display = "none";
 }
 
-function visApp() {
-    document.getElementById("login-side").style.display = "none";
-    document.getElementById("app-ramme").style.display = "block";
-    document.getElementById("velkomst-tekst").innerText = "👤 " + bruker;
-    oppdaterSkjerm();
+function byttDag(dag) {
+  valgtDag = dag;
+  document.getElementById("valgt-dag-tittel").innerText = dag;
+  oppdaterSkjerm();
 }
 
-// Funksjon for å bytte mellom "sidene" i bunnmenyen
-function byttSide(sideId) {
-    let faner = document.getElementsByClassName("fane");
-    for (let i = 0; i < faner.length; i++) {
-        faner[i].style.display = "none";
-    }
-    document.getElementById(sideId).style.display = "block";
+function leggTilOvelse() {
+  let tekst = document.getElementById("ovelse-input").value;
+  if (tekst == "") return;
+  if (!alleBrukere[bruker].plan[valgtDag]) {
+    alleBrukere[bruker].plan[valgtDag] = [];
+  }
+  alleBrukere[bruker].plan[valgtDag].push({ navn: tekst, gjort: false });
+  document.getElementById("ovelse-input").value = "";
+  lagre();
+  oppdaterSkjerm();
 }
 
-// Velger en hel ferdig plan og sender deg til "Min plan"
-function velgPlan(tittel, ovelser, poeng) {
-    aktivPlan = {
-        tittel: tittel,
-        ovelser: ovelser,
-        poeng: poeng
-    };
-    lagreData();
-    oppdaterSkjerm();
-    byttSide("side-min-plan"); // Hopper automatisk til Min plan
+function fullforOvelse(index) {
+  let ovelse = alleBrukere[bruker].plan[valgtDag][index];
+  if (!ovelse.gjort) {
+    ovelse.gjort = true;
+    alleBrukere[bruker].poeng += 10;
+  } else {
+    ovelse.gjort = false;
+    alleBrukere[bruker].poeng -= 10;
+  }
+  lagre();
+  oppdaterSkjerm();
 }
 
-// Gir poeng når du fullfører den valgte planen
-function fullforAktivPlan() {
-    if (!aktivPlan) return;
-    giPoeng(aktivPlan.poeng);
-    alert("Bra jobbet! Du fikk " + aktivPlan.poeng + " poeng!");
+function slettOvelse(index) {
+  alleBrukere[bruker].plan[valgtDag].splice(index, 1);
+  lagre();
+  oppdaterSkjerm();
 }
 
-function leggTilEgenOvelse() {
-    let dag = document.getElementById("dag-velger").value;
-    let ovelse = document.getElementById("ovelse-input").value;
-    if (ovelse === "") return;
+function velgPlan(type) {
+  let nyPlan = {
+    Mandag: [], Tirsdag: [], Onsdag: [], Torsdag: [], Fredag: [], Lørdag: [], Søndag: []
+  };
 
-    egneOvelser.push(dag + ": " + ovelse);
-    document.getElementById("ovelse-input").value = "";
-    lagreData();
-    oppdaterSkjerm();
-}
+  if (type == "nybegynner") {
+    nyPlan.Mandag = [{ navn: "3x10 Knebøy", gjort: false }, { navn: "3x10 Pushups", gjort: false }];
+    nyPlan.Onsdag = [{ navn: "3x10 Utfall", gjort: false }, { navn: "30 sek Planke", gjort: false }];
+    nyPlan.Fredag = [{ navn: "20 min Jogging", gjort: false }];
+  } else if (type == "styrke") {
+    nyPlan.Mandag = [{ navn: "4x8 Benkpress", gjort: false }, { navn: "3x10 Skulderpress", gjort: false }];
+    nyPlan.Onsdag = [{ navn: "4x8 Markløft", gjort: false }, { navn: "3x10 Nedtrekk", gjort: false }];
+    nyPlan.Fredag = [{ navn: "4x8 Knebøy", gjort: false }, { navn: "3x12 Leg curl", gjort: false }];
+  } else if (type == "kondis") {
+    nyPlan.Tirsdag = [{ navn: "30 min Løping", gjort: false }];
+    nyPlan.Torsdag = [{ navn: "4x4 Intervaller", gjort: false }];
+    nyPlan.Søndag = [{ navn: "45 min Sykling", gjort: false }];
+  }
 
-function giPoeng(antall) {
-    for (let i = 0; i < poengListe.length; i++) {
-        if (poengListe[i].navn === bruker) {
-            poengListe[i].poeng += antall;
-        }
-    }
-    lagreData();
-    oppdaterSkjerm();
-}
-
-function lagreData() {
-    localStorage.setItem("aktivPlan", JSON.stringify(aktivPlan));
-    localStorage.setItem("egneOvelser", JSON.stringify(egneOvelser));
-    localStorage.setItem("poengListe", JSON.stringify(poengListe));
+  alleBrukere[bruker].plan = nyPlan;
+  lagre();
+  oppdaterSkjerm();
 }
 
 function oppdaterSkjerm() {
-    // 1. Oppdater valgt ferdig plan
-    if (aktivPlan) {
-        document.getElementById("aktiv-plan-boks").style.display = "block";
-        document.getElementById("ingen-plan-tekst").style.display = "none";
-        document.getElementById("aktiv-plan-tittel").innerText = aktivPlan.tittel;
-        document.getElementById("aktiv-plan-ovelse").innerText = aktivPlan.ovelser;
-        document.getElementById("aktiv-plan-poeng").innerText = aktivPlan.poeng;
-    }
+  document.getElementById("poeng-tekst").innerText = alleBrukere[bruker].poeng;
 
-    // 2. Oppdater egne ukeplan-øvelser
-    let planListe = document.getElementById("egen-plan-liste");
-    planListe.innerHTML = "";
-    for (let i = 0; i < egneOvelser.length; i++) {
-        planListe.innerHTML += "<li>" + egneOvelser[i] + "</li>";
-    }
+  let liste = document.getElementById("ovelse-liste");
+  liste.innerHTML = "";
+  let dagensOvelser = alleBrukere[bruker].plan[valgtDag] || [];
 
-    // 3. Oppdater leaderboard
-    poengListe.sort((a, b) => b.poeng - a.poeng);
-    let lbListe = document.getElementById("leaderboard-liste");
-    lbListe.innerHTML = "";
-    for (let i = 0; i < poengListe.length; i++) {
-        lbListe.innerHTML += "<li><strong>" + poengListe[i].navn + "</strong>: " + poengListe[i].poeng + " poeng</li>";
-    }
+  for (let i = 0; i < dagensOvelser.length; i++) {
+    let li = document.createElement("li");
+    let klasse = dagensOvelser[i].gjort ? "ferdig" : "";
+    li.innerHTML = `
+      <span class="${klasse}">${dagensOvelser[i].navn}</span>
+      <div>
+        <button onclick="fullforOvelse(${i})">Ferdig</button>
+        <button onclick="slettOvelse(${i})" style="background:red;">Slett</button>
+      </div>
+    `;
+    liste.appendChild(li);
+  }
+
+  let lbListe = document.getElementById("leaderboard-liste");
+  lbListe.innerHTML = "";
+
+  let sortert = Object.keys(alleBrukere).sort(function(a, b) {
+    return alleBrukere[b].poeng - alleBrukere[a].poeng;
+  });
+
+  for (let i = 0; i < sortert.length; i++) {
+    let navn = sortert[i];
+    let li = document.createElement("li");
+    li.innerText = (i + 1) + ". " + navn + " - " + alleBrukere[navn].poeng + " poeng";
+    lbListe.appendChild(li);
+  }
 }
